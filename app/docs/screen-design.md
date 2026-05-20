@@ -6,7 +6,7 @@
 /groups/[groupId]/ai-threads/[threadId]
 
 
-
+## フォルダ構成
 src/app/
 ├─ login/
 │  └─ page.tsx
