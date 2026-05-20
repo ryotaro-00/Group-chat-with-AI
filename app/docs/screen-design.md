@@ -1,4 +1,4 @@
-/login
+/
 /register
 /groups
 /groups/[groupId]/chat
@@ -7,17 +7,18 @@
 
 
 ## フォルダ構成
-src/app/
-├─ login/
-│  └─ page.tsx
-├─ register/
-│  └─ page.tsx
-├─ groups/
-│  ├─ page.tsx
-│  └─ [groupId]/
-│     ├─ chat/
-│     │  └─ page.tsx
-│     └─ ai-threads/
-│        ├─ page.tsx
-│        └─ [threadId]/
-│           └─ page.tsx
+
+src/
+└─ app/
+   ├─ page.tsx
+   ├─ register/
+   │  └─ page.tsx
+   └─ groups/
+      ├─ page.tsx
+      └─ [groupId]/
+         ├─ chat/
+         │  └─ page.tsx
+         └─ ai-threads/
+            ├─ page.tsx
+            └─ [threadId]/
+               └─ page.tsx
