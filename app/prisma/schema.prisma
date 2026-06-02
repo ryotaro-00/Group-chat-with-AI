@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  teamMembers   TeamMember[]
+  chatMessages  ChatMessage[]
+  aiThreads     AiThread[]
+  aiMessages    AiMessage[]
+  aiComments    AiComment[]
+  pins          Pin[]
+  statusChanges StatusHistory[]
+
+  @@map("users")
+}
+
+model Team {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  members      TeamMember[]
+  chatMessages ChatMessage[]
+  aiThreads    AiThread[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id        Int      @id @default(autoincrement())
+  teamId    Int      @map("team_id")
+  userId    Int      @map("user_id")
+  role      TeamRole @default(MEMBER)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  teamId    Int      @map("team_id")
+  userId    Int      @map("user_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+}
+
+model AiThread {
+  id        Int          @id @default(autoincrement())
+  teamId    Int          @map("team_id")
+  title     String
+  status    ThreadStatus @default(UNRESOLVED)
+  createdBy Int          @map("created_by")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  team    Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  messages      AiMessage[]
+  pins          Pin[]
+  statusHistory StatusHistory[]
+
+  @@map("ai_threads")
+}
+
+model AiMessage {
+  id         Int        @id @default(autoincrement())
+  threadId   Int        @map("thread_id")
+  senderType SenderType @map("sender_type")
+  userId     Int?       @map("user_id")
+  content    String
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  thread AiThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user   User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  comments AiComment[]
+  pins     Pin[]
+
+  @@map("ai_messages")
+}
+
+model AiComment {
+  id          Int      @id @default(autoincrement())
+  aiMessageId Int      @map("ai_message_id")
+  userId      Int      @map("user_id")
+  content     String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  aiMessage AiMessage @relation(fields: [aiMessageId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ai_comments")
+}
+
+model Pin {
+  id          Int      @id @default(autoincrement())
+  threadId    Int      @map("thread_id")
+  aiMessageId Int      @map("ai_message_id")
+  pinnedBy    Int      @map("pinned_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  thread    AiThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  aiMessage AiMessage @relation(fields: [aiMessageId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [pinnedBy], references: [id], onDelete: Cascade)
+
+  @@unique([aiMessageId, pinnedBy])
+  @@map("pins")
+}
+
+model StatusHistory {
+  id        Int           @id @default(autoincrement())
+  threadId  Int           @map("thread_id")
+  oldStatus ThreadStatus? @map("old_status")
+  newStatus ThreadStatus  @map("new_status")
+  changedBy Int           @map("changed_by")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  thread AiThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user   User     @relation(fields: [changedBy], references: [id], onDelete: Cascade)
+
+  @@map("status_history")
+}
+
+enum TeamRole {
+  OWNER
+  MEMBER
+}
+
+enum ThreadStatus {
+  UNRESOLVED
+  PENDING
+  RESOLVED
+}
+
+enum SenderType {
+  USER
+  AI
+}
