@@ -1,14 +1,16 @@
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
 
-const groups = [
-  { id: "team-alpha", name: "開発チームA" },
-  { id: "team-beta", name: "マーケチームB" },
-];
+export const dynamic = "force-dynamic";
 
-export default function GroupsPage() {
+export default async function GroupsPage() {
+  const groups = await prisma.team.findMany({
+    orderBy: { id: "asc" },
+  });
+
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
-      <h1 className="text-2xl font-bold">グループ選択</h1>
+      <h1 className="text-2xl font-bold">グループ一覧</h1>
       <ul className="space-y-3">
         {groups.map((group) => (
           <li key={group.id} className="rounded border p-4">
