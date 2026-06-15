@@ -1,9 +1,9 @@
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 
-const messages = [
-  { id: 1, user: "田中", text: "今日の進捗どうですか？", time: "09:15" },
-  { id: 2, user: "佐藤", text: "ログイン画面まで完了しました。", time: "09:17" },
-];
+export const dynamic = "force-dynamic";
 
 export default async function GroupChatPage({
   params,
@@ -11,11 +11,73 @@ export default async function GroupChatPage({
   params: Promise<{ groupId: string }>;
 }) {
   const { groupId } = await params;
+  const teamId = Number(groupId);
+
+  const team = await prisma.team.findFirst({
+    where: Number.isInteger(teamId) ? { id: teamId } : { name: "開発チームA" },
+    include: {
+      chatMessages: {
+        include: { user: true },
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  });
+
+  if (!team) {
+    notFound();
+  }
+
+  async function createChatMessage(formData: FormData) {
+    "use server";
+
+    const content = String(formData.get("content") ?? "").trim();
+
+    if (content.length === 0) {
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: "tanaka@example.com" },
+    });
+
+    if (!user) {
+      throw new Error("投稿者のユーザーが見つかりません。seedを実行してください。");
+    }
+
+    await prisma.chatMessage.create({
+      data: {
+        teamId: team.id,
+        userId: user.id,
+        content,
+      },
+    });
+
+    revalidatePath(`/groups/${groupId}/chat`);
+  }
+
+  async function deleteChatMessage(formData: FormData) {
+    "use server";
+
+    const messageId = Number(formData.get("messageId"));
+
+    if (!Number.isInteger(messageId)) {
+      return;
+    }
+
+    await prisma.chatMessage.delete({
+      where: { id: messageId },
+    });
+
+    revalidatePath(`/groups/${groupId}/chat`);
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-10">
-      <h1 className="text-2xl font-bold">チャット: {groupId}</h1>
+      <h1 className="text-2xl font-bold">チャット: {team.name}</h1>
       <nav className="flex gap-4 text-sm">
+        <Link className="text-blue-600 underline" href="/groups">
+          グループ一覧
+        </Link>
         <Link className="text-blue-600 underline" href={`/groups/${groupId}/chat`}>
           チャット
         </Link>
@@ -24,16 +86,37 @@ export default async function GroupChatPage({
         </Link>
       </nav>
       <ul className="space-y-3 rounded border p-4">
-        {messages.map((message) => (
-          <li key={message.id}>
-            <p className="text-sm text-zinc-500">
-              {message.user} ・ {message.time}
-            </p>
-            <p>{message.text}</p>
+        {team.chatMessages.map((message) => (
+          <li key={message.id} className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-zinc-500">
+                {message.user.name} ・{" "}
+                {message.createdAt.toLocaleTimeString("ja-JP", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+              <p>{message.content}</p>
+            </div>
+            <form action={deleteChatMessage}>
+              <input name="messageId" type="hidden" value={message.id} />
+              <button className="text-sm text-red-600 underline" type="submit">
+                削除
+              </button>
+            </form>
           </li>
         ))}
       </ul>
-      <input className="rounded border p-2" placeholder="メッセージを入力" />
+      <form action={createChatMessage} className="flex gap-2">
+        <input
+          className="min-w-0 flex-1 rounded border p-2"
+          name="content"
+          placeholder="メッセージを入力"
+        />
+        <button className="rounded bg-blue-600 px-4 py-2 text-white" type="submit">
+          投稿
+        </button>
+      </form>
     </main>
   );
 }
