@@ -1,9 +1,19 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
+import { loadEnvFile } from "node:process";
+import OpenAI from "openai";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
+
+if (!process.env.OPENAI_API_KEY) {
+  loadEnvFile("app/.env");
+}
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export default async function AiThreadDetailPage({
   params,
@@ -63,12 +73,35 @@ export default async function AiThreadDetailPage({
       },
     });
 
+    const response = await openai.responses.create({
+      model: process.env.OPENAI_MODEL ?? "gpt-5.5",
+      instructions:
+        "あなたはチーム開発を手伝うAIアシスタントです。日本語で、短く分かりやすく回答してください。",
+      input: content,
+    });
+
     await prisma.aiMessage.create({
       data: {
         threadId: thread.id,
         senderType: "AI",
-        content: `仮の回答です。「${content}」については、あとでAI APIにつなげて回答を生成します。`,
+        content: response.output_text,
       },
+    });
+
+    revalidatePath(`/groups/${groupId}/ai-threads/${threadId}`);
+  }
+
+  async function deleteAiMessage(formData: FormData) {
+    "use server";
+
+    const aiMessageId = Number(formData.get("aiMessageId"));
+
+    if (!Number.isInteger(aiMessageId)) {
+      return;
+    }
+
+    await prisma.aiMessage.delete({
+      where: { id: aiMessageId },
     });
 
     revalidatePath(`/groups/${groupId}/ai-threads/${threadId}`);
@@ -95,12 +128,20 @@ export default async function AiThreadDetailPage({
         </p>
         <ul className="space-y-3">
           {thread.messages.map((message) => (
-            <li key={message.id}>
-              <p className="text-xs uppercase text-zinc-500">
-                {message.senderType}
-                {message.user ? ` / ${message.user.name}` : ""}
-              </p>
-              <p>{message.content}</p>
+            <li key={message.id} className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase text-zinc-500">
+                  {message.senderType}
+                  {message.user ? ` / ${message.user.name}` : ""}
+                </p>
+                <p>{message.content}</p>
+              </div>
+              <form action={deleteAiMessage}>
+                <input name="aiMessageId" type="hidden" value={message.id} />
+                <button className="text-sm text-red-600 underline" type="submit">
+                  削除
+                </button>
+              </form>
             </li>
           ))}
         </ul>
