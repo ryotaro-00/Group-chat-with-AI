@@ -30,3 +30,11 @@ export async function login(formData: FormData) {
 
   redirect("/groups");
 }
+
+export async function logout() {
+  const cookieStore = await cookies();
+
+  cookieStore.delete("userId");
+
+  redirect("/");
+}
