@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { login } from "@/app/actions";
 
 const routes = [
   { href: "/register", label: "新規登録" },
@@ -18,9 +19,23 @@ export default function HomePage() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-4 px-6 py-10">
       <h1 className="text-2xl font-bold">ログイン</h1>
-      <input className="rounded border p-2" placeholder="メールアドレス" />
-      <input className="rounded border p-2" placeholder="パスワード" type="password" />
-      <button className="rounded bg-blue-600 px-4 py-2 text-white">ログイン</button>
+      <form action={login} className="flex flex-col gap-4">
+        <input
+          className="rounded border p-2"
+          name="email"
+          placeholder="メールアドレス"
+          type="email"
+        />
+        <input
+          className="rounded border p-2"
+          name="password"
+          placeholder="パスワード"
+          type="password"
+        />
+        <button className="rounded bg-blue-600 px-4 py-2 text-white" type="submit">
+          ログイン
+        </button>
+      </form>
       <Link className="text-sm text-blue-600 underline" href="/register">
         新規登録はこちら
       </Link>
