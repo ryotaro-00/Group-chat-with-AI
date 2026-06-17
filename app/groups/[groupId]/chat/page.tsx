@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { DeleteChatMessageButton } from "./delete-chat-message-button";
 
 export const dynamic = "force-dynamic";
 
@@ -110,9 +111,7 @@ export default async function GroupChatPage({
             </div>
             <form action={deleteChatMessage}>
               <input name="messageId" type="hidden" value={message.id} />
-              <button className="text-sm text-red-600 underline" type="submit">
-                削除
-              </button>
+              <DeleteChatMessageButton />
             </form>
           </li>
         ))}
