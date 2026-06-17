@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { DeleteThreadButton } from "./delete-thread-button";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +71,22 @@ export default async function AiThreadsPage({
     redirect(`/groups/${groupId}/ai-threads/${newThread.id}`);
   }
 
+  async function deleteAiThread(formData: FormData) {
+    "use server";
+
+    const threadId = Number(formData.get("threadId"));
+
+    if (!Number.isInteger(threadId)) {
+      return;
+    }
+
+    await prisma.aiThread.delete({
+      where: { id: threadId },
+    });
+
+    revalidatePath(`/groups/${groupId}/ai-threads`);
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-10">
       <h1 className="text-2xl font-bold">AI質問一覧: {team.name}</h1>
@@ -101,12 +119,18 @@ export default async function AiThreadsPage({
               status: {thread.status} / 作成者: {thread.creator.name} / メッセージ{" "}
               {thread._count.messages}件
             </p>
-            <Link
-              className="mt-2 inline-block text-sm text-blue-600 underline"
-              href={`/groups/${groupId}/ai-threads/${thread.id}`}
-            >
-              詳細を見る
-            </Link>
+            <div className="mt-2 flex gap-4 text-sm">
+              <Link
+                className="text-blue-600 underline"
+                href={`/groups/${groupId}/ai-threads/${thread.id}`}
+              >
+                詳細を見る
+              </Link>
+              <form action={deleteAiThread}>
+                <input name="threadId" type="hidden" value={thread.id} />
+                <DeleteThreadButton />
+              </form>
+            </div>
           </li>
         ))}
       </ul>
