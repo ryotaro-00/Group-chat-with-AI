@@ -73,18 +73,28 @@ export default async function AiThreadDetailPage({
       },
     });
 
-    const response = await openai.responses.create({
-      model: process.env.OPENAI_MODEL ?? "gpt-5.5",
-      instructions:
-        "あなたはチーム開発を手伝うAIアシスタントです。日本語で、短く分かりやすく回答してください。",
-      input: content,
-    });
+    let aiContent = "";
+
+    try {
+      const response = await openai.responses.create({
+        model: process.env.OPENAI_MODEL ?? "gpt-5.5",
+        instructions:
+          "あなたはチーム開発を手伝うAIアシスタントです。日本語で、短く分かりやすく回答してください。",
+        input: content,
+      });
+
+      aiContent = response.output_text;
+    } catch (error) {
+      console.error(error);
+      aiContent =
+        "AI回答の生成に失敗しました。APIキー、モデル名、課金設定、またはネットワーク状態を確認してください。";
+    }
 
     await prisma.aiMessage.create({
       data: {
         threadId: thread.id,
         senderType: "AI",
-        content: response.output_text,
+        content: aiContent,
       },
     });
 
