@@ -4,17 +4,23 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
-export type RegisterState = {
+export type AuthActionState = {
   status: "success" | "error";
   message: string;
 } | null;
 
-export async function login(formData: FormData) {
+export async function login(
+  _previousState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
   if (email.length === 0 || password.length === 0) {
-    return;
+    return {
+      status: "error",
+      message: "メールアドレスとパスワードを入力してください。",
+    };
   }
 
   const user = await prisma.user.findUnique({
@@ -22,7 +28,10 @@ export async function login(formData: FormData) {
   });
 
   if (!user || user.passwordHash !== password) {
-    return;
+    return {
+      status: "error",
+      message: "メールアドレスまたはパスワードが違います。",
+    };
   }
 
   const cookieStore = await cookies();
@@ -37,9 +46,9 @@ export async function login(formData: FormData) {
 }
 
 export async function register(
-  _previousState: RegisterState,
+  _previousState: AuthActionState,
   formData: FormData,
-): Promise<RegisterState> {
+): Promise<AuthActionState> {
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
