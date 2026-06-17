@@ -89,9 +89,6 @@ export default async function GroupChatPage({
         <Link className="text-blue-600 underline" href="/groups">
           グループ一覧
         </Link>
-        <Link className="text-blue-600 underline" href={`/groups/${groupId}/chat`}>
-          チャット
-        </Link>
         <Link className="text-blue-600 underline" href={`/groups/${groupId}/ai-threads`}>
           AI質問
         </Link>

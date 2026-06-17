@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { loadEnvFile } from "node:process";
 import OpenAI from "openai";
 import { prisma } from "@/lib/prisma";
+import { DeleteAiMessageButton } from "./delete-ai-message-button";
 
 export const dynamic = "force-dynamic";
 
@@ -158,9 +159,7 @@ export default async function AiThreadDetailPage({
               </div>
               <form action={deleteAiMessage}>
                 <input name="aiMessageId" type="hidden" value={message.id} />
-                <button className="text-sm text-red-600 underline" type="submit">
-                  削除
-                </button>
+                <DeleteAiMessageButton />
               </form>
             </li>
           ))}

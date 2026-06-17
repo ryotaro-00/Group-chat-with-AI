@@ -97,9 +97,6 @@ export default async function AiThreadsPage({
         <Link className="text-blue-600 underline" href={`/groups/${groupId}/chat`}>
           チャット
         </Link>
-        <Link className="text-blue-600 underline" href={`/groups/${groupId}/ai-threads`}>
-          AI質問
-        </Link>
       </nav>
       <form action={createAiThread} className="flex gap-2 rounded border p-4">
         <input
