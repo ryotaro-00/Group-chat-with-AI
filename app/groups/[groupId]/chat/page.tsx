@@ -27,6 +27,8 @@ export default async function GroupChatPage({
     notFound();
   }
 
+  const currentTeamId = team.id;
+
   async function createChatMessage(formData: FormData) {
     "use server";
 
@@ -46,7 +48,7 @@ export default async function GroupChatPage({
 
     await prisma.chatMessage.create({
       data: {
-        teamId: team.id,
+        teamId: currentTeamId,
         userId: user.id,
         content,
       },

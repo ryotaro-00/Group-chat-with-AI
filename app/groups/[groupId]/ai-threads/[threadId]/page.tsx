@@ -47,6 +47,8 @@ export default async function AiThreadDetailPage({
     notFound();
   }
 
+  const currentThreadId = thread.id;
+
   async function createAiQuestion(formData: FormData) {
     "use server";
 
@@ -66,7 +68,7 @@ export default async function AiThreadDetailPage({
 
     await prisma.aiMessage.create({
       data: {
-        threadId: thread.id,
+        threadId: currentThreadId,
         senderType: "USER",
         userId: user.id,
         content,
@@ -92,7 +94,7 @@ export default async function AiThreadDetailPage({
 
     await prisma.aiMessage.create({
       data: {
-        threadId: thread.id,
+        threadId: currentThreadId,
         senderType: "AI",
         content: aiContent,
       },

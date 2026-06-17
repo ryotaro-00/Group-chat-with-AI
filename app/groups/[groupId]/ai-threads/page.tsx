@@ -31,6 +31,8 @@ export default async function AiThreadsPage({
     notFound();
   }
 
+  const currentTeamId = team.id;
+
   async function createAiThread(formData: FormData) {
     "use server";
 
@@ -50,7 +52,7 @@ export default async function AiThreadsPage({
 
     const newThread = await prisma.aiThread.create({
       data: {
-        teamId: team.id,
+        teamId: currentTeamId,
         title,
         createdBy: user.id,
       },
