@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
@@ -38,12 +39,19 @@ export default async function GroupChatPage({
       return;
     }
 
+    const cookieStore = await cookies();
+    const userId = Number(cookieStore.get("userId")?.value);
+
+    if (!Number.isInteger(userId)) {
+      throw new Error("ログイン中のユーザーが見つかりません。ログインしてください。");
+    }
+
     const user = await prisma.user.findUnique({
-      where: { email: "tanaka@example.com" },
+      where: { id: userId },
     });
 
     if (!user) {
-      throw new Error("投稿者のユーザーが見つかりません。seedを実行してください。");
+      throw new Error("ログイン中のユーザーがDBに見つかりません。");
     }
 
     await prisma.chatMessage.create({

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
@@ -42,12 +43,19 @@ export default async function AiThreadsPage({
       return;
     }
 
+    const cookieStore = await cookies();
+    const userId = Number(cookieStore.get("userId")?.value);
+
+    if (!Number.isInteger(userId)) {
+      throw new Error("ログイン中のユーザーが見つかりません。ログインしてください。");
+    }
+
     const user = await prisma.user.findUnique({
-      where: { email: "tanaka@example.com" },
+      where: { id: userId },
     });
 
     if (!user) {
-      throw new Error("作成者のユーザーが見つかりません。seedを実行してください。");
+      throw new Error("ログイン中のユーザーがDBに見つかりません。");
     }
 
     const newThread = await prisma.aiThread.create({
