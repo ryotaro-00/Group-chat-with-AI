@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { logout } from "@/app/actions";
+import { createTeam, logout } from "@/app/actions";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +26,7 @@ export default async function GroupsPage() {
   });
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-10">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">所属チーム一覧</h1>
         <form action={logout}>
@@ -35,6 +35,25 @@ export default async function GroupsPage() {
           </button>
         </form>
       </div>
+
+      <section className="flex flex-col gap-3 border-b pb-6">
+        <h2 className="text-lg font-bold">チームを作成</h2>
+        <form action={createTeam} className="flex gap-3">
+          <input
+            className="min-w-0 flex-1 rounded border px-3 py-2"
+            name="name"
+            placeholder="チーム名"
+            required
+            type="text"
+          />
+          <button
+            className="rounded bg-blue-600 px-4 py-2 text-white"
+            type="submit"
+          >
+            作成
+          </button>
+        </form>
+      </section>
 
       {groups.length === 0 ? (
         <p className="rounded border border-dashed p-6 text-sm text-zinc-600">

@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
@@ -83,6 +84,34 @@ export async function register(
     status: "success",
     message: "登録しました。ログインしてください。",
   };
+}
+
+export async function createTeam(formData: FormData) {
+  const name = String(formData.get("name") ?? "").trim();
+  const cookieStore = await cookies();
+  const userId = Number(cookieStore.get("userId")?.value);
+
+  if (!Number.isInteger(userId)) {
+    redirect("/");
+  }
+
+  if (name.length === 0) {
+    return;
+  }
+
+  await prisma.team.create({
+    data: {
+      name,
+      members: {
+        create: {
+          userId,
+          role: "OWNER",
+        },
+      },
+    },
+  });
+
+  revalidatePath("/groups");
 }
 
 export async function logout() {
